@@ -2,8 +2,8 @@ const socketIO = require('socket.io');
 const http = require('http');
 
 const { app } = require('./app');
-
-
+const { User } = require('./models/User');
+const messageController = require('./controllers/messageControllers')
 const httpServer = http.createServer(app);
 const io = socketIO(httpServer);
 
@@ -50,13 +50,16 @@ const users = [
     },
 ]
 
-io.use((socket, next)=>{
-    const userIndex = users.findIndex(user => user.username === socket.handshake.query.username);
-    if(userIndex > -1){
-        users[userIndex].online = true;
-        users[userIndex].socketID = socket.id;
-        socket.userId = users[userIndex].id;
-        socket.currentUser = users[userIndex];
+io.use(async (socket, next)=>{
+    //const userIndex = users.findIndex(user => user.username === socket.handshake.query.username);
+    const { username, password } = socket.handshake.query;
+    const user = await User.findOne({username , password})
+    if(user){
+        user.online = socket.id;
+        //users[userIndex].socketID = socket.id;
+        await user.save();
+        socket.userId = user._id.toString();
+        socket.currentUser = user.toObject();
         return next();
     }
     return next(new Error('Could not found user'))
@@ -66,37 +69,48 @@ io.on('connection', (socket)=>{
     console.log('new connect from server');
     socket.broadcast.emit('newFriendOnline', {newUserid: socket.userId, socketID: socket.id});
     socket.emit('currentUser', {user: socket.currentUser})
-    socket.on('getListFriend', (data)=>{
-        const userIndex = users.findIndex(user => user.username === data.username);
-        //console.log(users[userIndex])
-        const listFriends = [];
-        if(userIndex > -1){
-            for(let i = 0; i < users[userIndex].listFriend.length; i++){
-                listFriends.push(users.filter(user => user.id === users[userIndex].listFriend[i])[0]);
-            }
-            //console.log(listFriends);
-            socket.emit('resList', listFriends)
-        }else{
-            socket.emit('resList', []);
-        }
-    })
+    // socket.on('getListFriend', (data)=>{
+    //     const userIndex = users.findIndex(user => user.username === data.username);
+    //     //console.log(users[userIndex])
+    //     const listFriends = [];
+    //     if(userIndex > -1){
+    //         for(let i = 0; i < users[userIndex].listFriend.length; i++){
+    //             listFriends.push(users.filter(user => user.id === users[userIndex].listFriend[i])[0]);
+    //         }
+    //         //console.log(listFriends);
+    //         socket.emit('resList', listFriends)
+    //     }else{
+    //         socket.emit('resList', []);
+    //     }
+    // })
 
-    socket.on('sendNewMessage', (data)=>{
+    socket.on('sendNewMessage', async (data)=>{
         const { fromUser, body, toUserId, fromUserId, socketID } = data;
-        console.log(data)
-        const message = {from: fromUser, body, fromUserId};
-        // get user 
-        const currentUserIndex = users.findIndex(user =>  user.id === fromUserId);
-        if(currentUserIndex > -1){
-            users[currentUserIndex].messages[toUserId].push({from: fromUser, body})
+        console.log(data);
+        // save message into database
+        const messageInfor = { from: fromUserId, to: toUserId, text: body}
+        const isSaved = await messageController.createMessage(messageInfor);
+        if(isSaved){
+            const message = {from: fromUser, body, fromUserId};
+            io.to(socketID).emit('newMessage', message);
+        }else{
+
         }
-        // update message at user who received message
-        const userReceiveIndex = users.findIndex(user =>  user.id === toUserId);
-        if(userReceiveIndex > -1){
-            console.log(users[userReceiveIndex].messages[fromUserId])
-            users[userReceiveIndex].messages[fromUserId].push({from: fromUser, body})
-        }
-        io.to(socketID).emit('newMessage', message);
+
+
+        
+        // // get user 
+        // const currentUserIndex = users.findIndex(user =>  user.id === fromUserId);
+        // if(currentUserIndex > -1){
+        //     users[currentUserIndex].messages[toUserId].push({from: fromUser, body})
+        // }
+        // // update message at user who received message
+        // const userReceiveIndex = users.findIndex(user =>  user.id === toUserId);
+        // if(userReceiveIndex > -1){
+        //     console.log(users[userReceiveIndex].messages[fromUserId])
+        //     users[userReceiveIndex].messages[fromUserId].push({from: fromUser, body})
+        // }
+        
 
     })
 })

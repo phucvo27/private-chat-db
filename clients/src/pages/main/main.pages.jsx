@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios'
 import getSocketConnection from '../../utils/socketConnection';
 import './main.style.scss';
 
@@ -9,48 +10,47 @@ class Main extends React.Component{
             listFriend: [],
             username: '',
             currentUserChating: '',
-            currentMessage: '',
-            messages: null
+            currentUserChattingSocket: '',
+            messages: null,
+            user: null
         }
     }
 
     componentDidMount(){
         const username = prompt('Username : ');
+        const password = prompt('Password : ')
         //const username = 'phucvo'
         try{
-            const socket = getSocketConnection(username);
+            const socket = getSocketConnection(username, password);
             socket.on('connect', ()=>{
                 if(socket.connected){
                     console.log('connect success');
                     console.log(socket.id)
-                    socket.emit('getListFriend', {username})
+                    
                 }else{
                     console.log('something went wrong')
                 }
             });
-            socket.on('currentUser', (data)=>{
+            socket.on('currentUser', async (data)=>{
                 const { user } = data;
+                console.log(user)
+                const response = await axios.get(`http://localhost:5000/users/${user._id}/list-friend`);
+                console.log(response.data)
+                const { friends } = response.data.user
                 this.setState(()=>{
                     return {
-                        id: user.id,
                         username: user.username,
-                        messages: user.messages,
-                        currentMessage: Object.keys(user.messages)[0]
+                        user,
+                        listFriend: friends,
+                        currentUserChating: friends[0]._id
                     }
-                })
+                });
+
                 
             })
-            socket.on('resList', (listFriend)=>{
-                if(listFriend.length > 0){
-                    this.setState(()=>({listFriend}))
-                }else{
-                    console.log('No Friends')
-                }
-            })
-
             socket.on('newFriendOnline', ({newUserid, socketID})=>{
                 console.log(newUserid, socketID)
-                const isFriend = this.state.listFriend.findIndex(({id}) => id === newUserid);
+                const isFriend = this.state.listFriend.findIndex(({_id}) => _id === newUserid);
                 if(isFriend > -1){
                     console.log('prepare to update friend status')
                     this.setState(prevState => {
@@ -77,13 +77,28 @@ class Main extends React.Component{
         }
         
     }
+    handleChooseUserForChatting = async (_id, socketID)=>{
+        const res = await axios.get(`http://localhost:5000/chat/${_id}`);
+        console.log(res.data)
+        const { messages } = res.data.chat
+        this.setState(()=>(
+            {
+                currentUserChattingSocket: socketID, 
+                currentUserChating: _id,
+                messages
+            }
+            ))
+    }
     renderListFriends = ()=>{
         const { listFriend }= this.state;
         if(listFriend.length > 0){
-            return listFriend.map(({id, username, online, socketID}, index)=> (
-                <div className={`friend ${index === 0 ? 'active':'' }`} key={index} onClick={()=>{
-                    this.setState(()=>({currentUserChating: socketID, currentMessage: id}))
-                }}>
+            return listFriend.map(({_id, username, online, socketID}, index)=> (
+                <div 
+                    className={`friend ${index === 0 ? 'active':'' }`} 
+                    key={index}
+                    onClick={()=>{
+                        this.handleChooseUserForChatting(_id, socketID)
+                    }}>
                     <div className='friend--avatar'>
                         <img src="https://png.pngtree.com/svg/20170308/508749a69e.svg" alt="friend avatar" />
                     </div>
@@ -99,18 +114,18 @@ class Main extends React.Component{
     }
 
     renderMessages = ()=>{
-        const { currentMessage, messages, username } = this.state;
+        const { messages, user } = this.state;
         if(messages){
-            return messages[currentMessage].map((message, index) => {
+            return messages.map((message, index) => {
                 return (
                     <li className='message' key={index}>
-                        <div className={`message__details ${message.from === username && 'owner'}`}>
+                        <div className={`message__details ${message.from === user._id && 'owner'}`}>
                             <div className='message__details--avatar'>
                                 <img src="https://png.pngtree.com/svg/20170308/508749a69e.svg" alt="message__details avatar" />
                             </div>
                             <div className='message__details--text'>
                                 <h4>{message.from}</h4>
-                                <p>{message.body}</p>
+                                <p>{message.text}</p>
                             </div>
                         </div>
                     </li>
@@ -126,14 +141,19 @@ class Main extends React.Component{
         e.preventDefault();
         const socket = getSocketConnection();
         const body = e.target.elements.message.value;
-        const { username, currentMessage, id,currentUserChating} = this.state;
-        socket.emit('sendNewMessage',{fromUser: username, body, toUserId: currentMessage, fromUserId: id, socketID: currentUserChating})
-        this.setState((prevState)=>{
-            prevState.messages[currentMessage].push({from: username, body})
-            return {
-                messages: prevState.messages
-            }
-        })
+        const {currentUserChattingSocket, user,currentUserChating} = this.state;
+        socket.emit('sendNewMessage',{
+            fromUser: user.username, 
+            body, 
+            toUserId: currentUserChating, 
+            fromUserId: user._id, 
+            socketID: currentUserChattingSocket})
+        // this.setState((prevState)=>{
+        //     prevState.messages[currentMessage].push({from: username, body})
+        //     return {
+        //         messages: prevState.messages
+        //     }
+        // })
     }
     render(){
         console.log(this.state)
