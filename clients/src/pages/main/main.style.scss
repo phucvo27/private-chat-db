@@ -1,0 +1,141 @@
+.container{
+
+    margin: 5rem auto;
+    width: 80%;
+    height: 100vh;
+    box-shadow: 1rem 2rem 5rem rgba(0,0,0,.2);
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    
+    .list-friends{
+        width: 30%;
+        border-right: .1rem solid #ddd;
+        height: 100%;
+        overflow-y: hidden;
+        .friend{
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all .2s;
+
+            &:hover, &.active{
+                background-color: #ddd;
+            }
+            &--avatar{
+                margin-right: 2rem;
+                img{
+                    width: 3.2rem;
+                    height: 3.2rem;
+                    border-radius: 50%;
+                }
+
+            }
+            &--name{
+                font-size: 1.6rem;
+                margin-right: auto;
+            }
+            &--online, &--offline{
+                height: 1rem;
+                width: 1rem;
+                background-color: greenyellow;
+                border-radius: 50%;
+            }
+            &--offline{ background-color: orange}
+        }
+    }
+
+    .message__box{
+        width: 70%;
+        padding: 2rem 1rem;
+        height: 100%;
+        overflow-y: auto;
+        position: relative;
+        h2{
+            font-size: 3.2rem;
+            font-weight: normal;
+            padding: 1rem 0;
+            border-bottom: .1rem solid #ddd;
+        }
+
+        .messages {
+            list-style: none;
+            background-color: rgba(221,221,221, .49);
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            .message{
+                margin: 2rem 0;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                flex-direction: column;
+                &__details{
+                    padding: 1rem;
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    width: 80%;
+                    background-color: #fff;
+                    border-radius: .7rem;
+                    box-shadow: 1rem 2rem 4rem rgba(0,0,0,.2);
+                    margin: 0 1rem;
+
+                    &.owner{
+                        align-self: flex-end;
+                        display: flex;
+                        flex-direction: row-reverse;
+                        background-color: rgba(121, 221, 255, 0.79);
+                    }
+
+                    &--avatar{
+                        img{
+                            width: 3.2rem;
+                            height: 3.2rem;
+                            border-radius: 50%;
+                        }
+                    }
+                    &--text{
+                        margin-left: 2rem;
+
+                        h4{
+                            font-size: 1.4rem;
+                            margin-bottom: 1rem;
+                        }
+                        p{
+                            font-size: 1.2rem;
+
+                        }
+                    }
+                }
+            }
+        }
+
+        form{
+            position: absolute;
+            left: 1rem;
+            bottom: -4rem;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
+            
+            input{
+                flex: 1;
+                margin-right: 2rem;
+                padding: 1rem;
+                border: .1rem solid #ddd;
+            }
+            button{
+                padding: 1rem 2rem;
+                border: none;
+                border-radius: .5rem;
+                background-color: aliceblue;
+                font-size: 1.2rem;
+            }
+        }
+    }
+}

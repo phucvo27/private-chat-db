@@ -1,0 +1,23 @@
+{
+  "name": "private-chat-db",
+  "version": "1.0.0",
+  "description": "This application is a part of main the project Social-Network , it is used for chatting ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/phucvo27/private-chat-db.git"
+  },
+  "author": "phuc vo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/phucvo27/private-chat-db/issues"
+  },
+  "homepage": "https://github.com/phucvo27/private-chat-db#readme"
+}
