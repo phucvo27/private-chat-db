@@ -24,6 +24,21 @@ const messageSchemas = new mongoose.Schema({
     }
 });
 
+// messageSchemas.pre(/^find/, function(next){
+//     console.log('in pre find of message')
+//     const message = this;
+//     message
+//         .populate({
+//             path: 'from',
+//             select: '_id username'
+//         })
+//         .populate({
+//             path: 'to',
+//             select: '_id username'
+//         })
+//     next()
+// })
+
 const Message = mongoose.model('Message', messageSchemas);
 
 module.exports = { Message }

@@ -69,30 +69,16 @@ io.on('connection', (socket)=>{
     console.log('new connect from server');
     socket.broadcast.emit('newFriendOnline', {newUserid: socket.userId, socketID: socket.id});
     socket.emit('currentUser', {user: socket.currentUser})
-    // socket.on('getListFriend', (data)=>{
-    //     const userIndex = users.findIndex(user => user.username === data.username);
-    //     //console.log(users[userIndex])
-    //     const listFriends = [];
-    //     if(userIndex > -1){
-    //         for(let i = 0; i < users[userIndex].listFriend.length; i++){
-    //             listFriends.push(users.filter(user => user.id === users[userIndex].listFriend[i])[0]);
-    //         }
-    //         //console.log(listFriends);
-    //         socket.emit('resList', listFriends)
-    //     }else{
-    //         socket.emit('resList', []);
-    //     }
-    // })
 
     socket.on('sendNewMessage', async (data)=>{
-        const { fromUser, body, toUserId, fromUserId, socketID } = data;
-        console.log(data);
+        const { fromUser, text, toUserId, fromUserId, socketID } = data;
+        console.log(socketID);
         // save message into database
-        const messageInfor = { from: fromUserId, to: toUserId, text: body}
-        const isSaved = await messageController.createMessage(messageInfor);
-        if(isSaved){
-            const message = {from: fromUser, body, fromUserId};
-            io.to(socketID).emit('newMessage', message);
+        const messageInfor = { from: fromUserId, to: toUserId, text}
+        const newMessage = await messageController.createMessage(messageInfor);
+        if(newMessage){
+            //const message = {from: fromUserId, text};
+            io.to(socketID).emit('newMessage', newMessage);
         }else{
 
         }
